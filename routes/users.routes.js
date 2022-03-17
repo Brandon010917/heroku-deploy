@@ -8,6 +8,7 @@ const {
   updateUserPut,
   updateUserPatch,
   deleteUser,
+  loginUser
 } = require("../controllers/users.controller");
 
 const router = express.Router();
@@ -29,5 +30,7 @@ router.patch("/:id", updateUserPatch);
 
 // DELETE http://localhost:4000/api/v1/users/:id
 router.delete("/:id", deleteUser);
+
+router.post("/login", loginUser);
 
 module.exports = { usersRouter: router };

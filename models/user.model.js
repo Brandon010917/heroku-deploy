@@ -9,19 +9,19 @@ const User = sequelize.define("user", {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
-    allowNull: false,
+    allowNull: false
   },
   name: {
     type: DataTypes.STRING(50),
-    allowNull: false,
+    allowNull: false
   },
   email: { type: DataTypes.STRING(50), allowNull: false, unique: true },
   password: { type: DataTypes.STRING(50), allowNull: false },
   status: {
     type: DataTypes.STRING(10),
     allowNull: false,
-    defaultValue: "active",
-  },
+    defaultValue: "active"
+  }
 });
 
 module.exports = { User };

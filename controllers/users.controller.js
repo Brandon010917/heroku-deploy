@@ -1,3 +1,5 @@
+const bcrypt = require("bcryptjs");
+
 // Models
 const { User } = require("../models/user.model");
 const { Post } = require("../models/post.model");
@@ -11,9 +13,12 @@ const { AppError } = require("../utils/appError");
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.findAll({
     where: {
-      status: "active",
+      status: "active"
     },
     include: [{ model: Post }, { model: Comment }],
+    attributes: {
+      exclude: ["password"]
+    }
   });
 
   res.status(200).json({ status: "success", data: { users } });
@@ -26,6 +31,9 @@ exports.getUserById = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     where: { id, status: "active" },
     include: [{ model: Post }, { model: Comment, include: [{ model: Post }] }],
+    attributes: {
+      exclude: ["password"]
+    }
   });
 
   if (!user) {
@@ -45,11 +53,16 @@ exports.createUser = catchAsync(async (req, res, next) => {
     );
   }
 
+  const salt = await bcrypt.genSalt(12);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
   const newUser = await User.create({
     name,
     email,
-    password,
+    password: hashedPassword
   });
+
+  newUser.password = undefined;
 
   res.status(201).json({ status: "success", data: { newUser } });
 });
@@ -68,8 +81,8 @@ exports.updateUserPut = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     where: {
       id,
-      status: "active",
-    },
+      status: "active"
+    }
   });
 
   if (!user) {
@@ -78,7 +91,7 @@ exports.updateUserPut = catchAsync(async (req, res, next) => {
 
   await user.update({
     name,
-    email,
+    email
   });
 
   res.status(204).json({ status: "success" });
@@ -92,8 +105,8 @@ exports.updateUserPatch = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     where: {
       id,
-      status: "active",
-    },
+      status: "active"
+    }
   });
 
   if (!user) {
@@ -112,8 +125,8 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     where: {
       id,
-      status: "active",
-    },
+      status: "active"
+    }
   });
 
   if (!user) {
@@ -123,4 +136,17 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   await user.update({ status: "deleted" });
 
   res.status(201).json({ status: "success" });
+});
+
+exports.loginUser = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({
+    where: { email, status: "active" }
+  });
+
+  if (!user || !(await bcrypt.compare(password, user.password)))
+    return next(new AppError(401, "Invalid credentials"));
+
+  res.status(200).json({ status: "success" });
 });
