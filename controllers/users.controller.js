@@ -1,4 +1,10 @@
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+
+dotenv.config({
+  path: "./config.env"
+});
 
 // Models
 const { User } = require("../models/user.model");
@@ -145,8 +151,13 @@ exports.loginUser = catchAsync(async (req, res, next) => {
     where: { email, status: "active" }
   });
 
-  if (!user || !(await bcrypt.compare(password, user.password)))
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     return next(new AppError(401, "Invalid credentials"));
+  }
 
-  res.status(200).json({ status: "success" });
+  const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN
+  });
+
+  res.status(200).json({ status: "success", data: { token } });
 });

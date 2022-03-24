@@ -11,10 +11,13 @@ const {
   loginUser
 } = require("../controllers/users.controller");
 
+// Middlewares
+const { validateSession } = require("../middlewares/auth.middleware");
+
 const router = express.Router();
 
 // GET http://localhost:4000/users
-router.get("/", getAllUsers);
+router.get("/", validateSession, getAllUsers);
 
 // GET http://localhost:4000/users/:id
 router.get("/:id", getUserById);
