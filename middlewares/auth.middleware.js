@@ -31,12 +31,23 @@ exports.validateSession = catchAsync(async (req, res, next) => {
   );
 
   const user = await User.findOne({
-    where: { id: decodedToken.id, status: "active" }
+    where: { id: decodedToken.id, status: "active" },
+
+    attributes: {
+      exclude: ["password"]
+    }
   });
 
-  if (!user) return next(new AppError(404, "User not found"));
+  if (!user) return next(new AppError(404, "Invalid session"));
 
   req.currentUser = user;
+
+  next();
+});
+
+exports.protectedAdmin = catchAsync(async (req, res, next) => {
+  if (req.currentUser.role !== "admin")
+    next(new AppError(403, "Access denied"));
 
   next();
 });

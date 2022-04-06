@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const compression = require("compression");
@@ -21,9 +22,11 @@ if (process.env.NODE_ENV === "production") app.use(morgan("dev"));
 else app.use(morgan("combined"));
 
 // Config express
+app.use(cors());
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
+app.use(express.urlencoded({ extended: true }));
 
 // Endpoints
 app.use("/api/v1/posts", postsRouter);

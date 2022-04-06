@@ -32,26 +32,14 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 
 // Get user by id
 exports.getUserById = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-
-  const user = await User.findOne({
-    where: { id, status: "active" },
-    include: [{ model: Post }, { model: Comment, include: [{ model: Post }] }],
-    attributes: {
-      exclude: ["password"]
-    }
-  });
-
-  if (!user) {
-    return next(new AppError(404, "User not found"));
-  }
+  const { user } = req;
 
   res.status(200).json({ status: "success", data: { user } });
 });
 
 // Create a new user
 exports.createUser = catchAsync(async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
 
   if (!name || !email || !password) {
     return next(
@@ -65,7 +53,8 @@ exports.createUser = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name,
     email,
-    password: hashedPassword
+    password: hashedPassword,
+    role
   });
 
   newUser.password = undefined;
@@ -75,24 +64,13 @@ exports.createUser = catchAsync(async (req, res, next) => {
 
 // Update a user (PUT)
 exports.updateUserPut = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+  const { user } = req;
   const { name, email } = req.body;
 
   if (!name || !email) {
     return next(
       new AppError(404, "Must provide a name and email for this request")
     );
-  }
-
-  const user = await User.findOne({
-    where: {
-      id,
-      status: "active"
-    }
-  });
-
-  if (!user) {
-    return next(new AppError(404, "User not found"));
   }
 
   await user.update({
@@ -105,15 +83,8 @@ exports.updateUserPut = catchAsync(async (req, res, next) => {
 
 // Update a user (PATCH)
 exports.updateUserPatch = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+  const { user } = req;
   const data = filterObj(req.body, "title", "content");
-
-  const user = await User.findOne({
-    where: {
-      id,
-      status: "active"
-    }
-  });
 
   if (!user) {
     return next(new AppError(404, "User not found"));
@@ -126,18 +97,7 @@ exports.updateUserPatch = catchAsync(async (req, res, next) => {
 
 // delete user
 exports.deleteUser = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-
-  const user = await User.findOne({
-    where: {
-      id,
-      status: "active"
-    }
-  });
-
-  if (!user) {
-    return next(new AppError(404, "User not found"));
-  }
+  const { user } = req;
 
   await user.update({ status: "deleted" });
 
@@ -147,6 +107,8 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
 exports.loginUser = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
+  console.log(email, password);
+
   const user = await User.findOne({
     where: { email, status: "active" }
   });
@@ -154,6 +116,8 @@ exports.loginUser = catchAsync(async (req, res, next) => {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return next(new AppError(401, "Invalid credentials"));
   }
+
+  user.password = undefined;
 
   const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN

@@ -7,27 +7,31 @@ const {
   createPost,
   updatePostPut,
   updatePostPatch,
-  deletePost,
+  deletePost
 } = require("../controllers/posts.controller");
+
+// Middlewares
+const {
+  validateSession,
+  protectedAdmin
+} = require("../middlewares/auth.middleware");
+const { postExists } = require("../middlewares/posts.middleware");
+
+// Utils
+const { upload } = require("../utils/multer");
 
 const router = express.Router();
 
-// GET http://localhost:4000/posts
-router.get("/", getAllPosts);
+router.use(validateSession);
 
-// GET http://localhost:4000/posts/:id
-router.get("/:id", getPostById);
+router.route("/").get(getAllPosts).post(upload.single("postImg"), createPost);
 
-// POST http://localhost:4000/posts
-router.post("/", createPost);
-
-// PUT http://localhost:4000/posts/:id
-router.put("/:id", updatePostPut);
-
-// PATCH http://localhost:4000/posts/:id
-router.patch("/:id", updatePostPatch);
-
-// DELETE http://localhost:4000/posts/:id
-router.delete("/:id", deletePost);
+router
+  .use("/:id", postExists)
+  .route("/:id")
+  .get(getPostById)
+  .put(updatePostPut)
+  .patch(updatePostPatch)
+  .delete(deletePost);
 
 module.exports = { postsRouter: router };

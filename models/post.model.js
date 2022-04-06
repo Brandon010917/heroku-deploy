@@ -5,24 +5,28 @@ const { sequelize } = require("../utils/database");
 const Post = sequelize.define("post", {
   content: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: false
   },
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
-    allowNull: false,
+    allowNull: false
+  },
+  postImg: {
+    type: DataTypes.STRING(255),
+    allowNull: true
   },
   userId: { type: DataTypes.INTEGER, allowNull: false },
   status: {
     type: DataTypes.STRING(255),
     defaultValue: "active",
-    allowNull: false,
+    allowNull: false
   },
   title: {
     type: DataTypes.STRING(255),
-    allowNull: false,
-  },
+    allowNull: false
+  }
 });
 
 module.exports = { Post };

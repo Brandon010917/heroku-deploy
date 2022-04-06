@@ -11,31 +11,20 @@ const { AppError } = require("../utils/appError");
 exports.getAllComments = catchAsync(async (req, res, next) => {
   const comments = await Comment.findAll({
     where: {
-      status: "active",
+      status: "active"
     },
-    include: [{ model: User }, { model: Post }],
+    include: [{ model: User }, { model: Post }]
   });
 
   res.status(200).json({ status: "success", data: { comments } });
 });
 
 exports.getCommentById = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-
-  const comment = await Comment.findOne({
-    where: { id, status: "active" },
-    include: [{ model: User }, { model: Post }],
-  });
-
-  if (!comment) {
-    return next(new AppError(404, "No comments found for this reuqest"));
-  }
-
   res.status(200).json({
     status: "success",
     data: {
-      comment,
-    },
+      comment
+    }
   });
 });
 

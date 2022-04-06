@@ -4,17 +4,21 @@ const express = require("express");
 const {
   getAllComments,
   getCommentById,
-  createComment,
+  createComment
 } = require("../controllers/comments.controller");
+
+// Middlewares
+const { validateSession } = require("../middlewares/auth.middleware");
+const { commentExists } = require("../middlewares/comments.middleware");
 
 const router = express.Router();
 
-router.get("/", getAllComments);
+router.use(validateSession);
 
-router.get("/:id", getCommentById);
+router.route("/").get(getAllComments).post(createComment);
 
-router.post("/", createComment);
+router.use("/:id", commentExists).route("/:id").get(getCommentById);
 
 module.exports = {
-  commentsRouter: router,
+  commentsRouter: router
 };

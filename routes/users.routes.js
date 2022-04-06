@@ -12,28 +12,31 @@ const {
 } = require("../controllers/users.controller");
 
 // Middlewares
-const { validateSession } = require("../middlewares/auth.middleware");
+const {
+  validateSession,
+  protectedAdmin
+} = require("../middlewares/auth.middleware");
+const {
+  userExists,
+  protectAccountOwner
+} = require("../middlewares/users.middleware");
 
 const router = express.Router();
 
-// GET http://localhost:4000/users
-router.get("/", validateSession, getAllUsers);
-
-// GET http://localhost:4000/users/:id
-router.get("/:id", getUserById);
-
-// POST http://localhost:4000/users
 router.post("/", createUser);
 
-// PUT http://localhost:4000/users/:id
-router.put("/:id", updateUserPut);
-
-// PATCH http://localhost:4000/users/:id
-router.patch("/:id", updateUserPatch);
-
-// DELETE http://localhost:4000/api/v1/users/:id
-router.delete("/:id", deleteUser);
-
 router.post("/login", loginUser);
+
+router.use(validateSession);
+
+router.get("/", protectedAdmin, getAllUsers);
+
+router
+  .use("/:id", userExists)
+  .route("/:id")
+  .get(getUserById)
+  .put(updateUserPut)
+  .patch(protectAccountOwner, updateUserPatch)
+  .delete(protectAccountOwner, deleteUser);
 
 module.exports = { usersRouter: router };
